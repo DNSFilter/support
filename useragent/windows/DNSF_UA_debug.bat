@@ -117,8 +117,14 @@ ECHO ---------------------------------------- >> %debugfile%
 Echo:
 Echo:
 netstat -an | findstr 53 >> %debugfile%
+ECHO Copying Roaming Client logs to %workdir%
+ECHO ---------------------------------------- >> %workdir%
+xcopy /S /I /Q /Y /F "C:\Program Files\DNSFilter Agent\logs.txt" "C:\temp\" 
+xcopy /S /I /Q /Y /F "C:\Program Files\DNS Agent\logs.txt" "C:\temp\"  
+ECHO COPY COMPLETE
 ECHO FINISHED!!
-ECHO THE RESULTS HAVE BEEN WRITTEN TO %debugfile%
+ECHO THE RESULTS OF DEBUGGER HAVE BEEN WRITTEN TO %debugfile%
+ECHO ALL LOGS HAVE BEEN COLLECETED, PLEASE PROVIDE TO SUPPORT.
 Echo:
 Echo:
 PAUSE
