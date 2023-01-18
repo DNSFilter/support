@@ -49,15 +49,15 @@ for interface in $(ifconfig -l); do
     ip=$(ifconfig $interface | awk '/inet /{print $2}')
     if [ -n "$ip" ]; then
         echo "Adapter: $interface" >> $ResultLog
-        mac=$(ifconfig $interface | awk '/ether /{print $2}')
-        subnet_hex="$(ifconfig | grep "netmask " | grep -v 0xff0 | sed -e 's/.*0x\(.*\)broadcast.*/\1/')"
-        subnet_dec=$((16#${subnet_hex}))
-        subnet_ip=$(printf "%d.%d.%d.%d\n" $((${subnet_dec} >> 24 & 255)) $((${subnet_dec} >> 16 & 255)) $((${subnet_dec} >> 8 & 255)) $((${subnet_dec} & 255)))
+  #      mac=$(ifconfig $interface | awk '/ether /{print $2}')
+  #      subnet_hex="$(ifconfig | grep "netmask " | grep -v 0xff0 | sed -e 's/.*0x\(.*\)broadcast.*/\1/')"
+  #      subnet_dec=$((16#${subnet_hex}))
+  #      subnet_ip=$(printf "%d.%d.%d.%d\n" $((${subnet_dec} >> 24 & 255)) $((${subnet_dec} >> 16 & 255)) $((${subnet_dec} >> 8 & 255)) $((${subnet_dec} & 255)))
         router=$(netstat -nr | grep -v "::" | grep default | awk '{print $2}')
         dns=$(scutil --dns | grep nameserver | awk '{print $3}')
         echo "IP address: $ip" >> $ResultLog
-        echo "Subnet Mask: $subnet_ip" >> $ResultLog
-        echo "MAC address: $mac" >> $ResultLog
+      #  echo "Subnet Mask: $subnet_ip" >> $ResultLog
+      #  echo "MAC address: $mac" >> $ResultLog
         echo "Router: $router" >> $ResultLog
         echo "DNS Servers: $dns" >> $ResultLog
         echo  "  ">> $ResultLog
