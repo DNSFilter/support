@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Verify the script is ran as sudo user
+if [ "$EUID" -ne 0 ]; then 
+  echo "Please run as root"
+  exit
+fi
+
+# Create the "DNSFilter Logs" directory if it doesn't exist
+if [ ! -d "$HOME/Downloads/DNSFilterLogs" ]; then
+  mkdir -p $HOME/Downloads/DNSFilterLogs
+fi
+
 # Store all results to this file
 ResultLog=$HOME/Downloads/DNSFilterLogs/DNSFilterDebug.txt
 echo "" > $ResultLog
@@ -9,17 +20,8 @@ echo "DNSFilter Debugger for Mac"
 echo "The purpose of this tool is to assist support engineers with common requests."
 #CREATED BY RICK COHEN DEC 2022
 echo "======================================================" 
-# Create the "DNSFilter Logs" directory if it doesn't exist
-if [ ! -d "$HOME/Downloads/DNSFilterLogs" ]; then
-  mkdir -p $HOME/Downloads/DNSFilterLogs
-fi
 
-# Verify the script is ran as sudo user
-if [ "$EUID" -ne 0 ]; then 
-  echo "Please run as root"
-  exit
-fi
-echo "======================================================" >> $ResultLog
+
 
 echo "Checking to see if 'DNSFilter Agent' is active..." 
 echo "======================================================"
