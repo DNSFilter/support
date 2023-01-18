@@ -43,7 +43,7 @@ echo "======================================================" >> $ResultLog
 echo " " >>$ResultLog
 # List Info for active network adapters
 echo "Active Network Adapters:" >> $ResultLog
-echo "======================================================" >> $ResultLog
+echo "------------------------" >> $ResultLog
 
 for interface in $(ifconfig -l); do
     ip=$(ifconfig $interface | awk '/inet /{print $2}')
@@ -71,7 +71,7 @@ ping -c 4 8.8.8.8
 ping -c 4 8.8.8.8 >> $ResultLog
 
 echo "======================================================" >> $ResultLog
-​
+
 # Perform nslookup -type=txt debug.dnsfilter.com
 echo "Performing first nslookup"
 nslookup -type=txt debug.dnsfilter.com
@@ -83,13 +83,14 @@ echo "======================================================" >> $ResultLog
 echo "Performing second nslookup"
 nslookup -type=txt debug.dnsfilter.com 103.247.36.36
 nslookup -type=txt debug.dnsfilter.com 103.247.36.36 >> $ResultLog
-​
+
 echo "======================================================" >> $ResultLog
 
 # Perform nslookup -type=txt debug.dnsfilter.com 103.247.37.37
 echo "Performing final nslookup"
 nslookup -type=txt debug.dnsfilter.com 103.247.37.37
 nslookup -type=txt debug.dnsfilter.com 103.247.37.37 >> $ResultLog
+
 
 echo "======================================================" >> $ResultLog
 echo "======================================================" 
@@ -108,9 +109,10 @@ echo "The follow PID and Applications are using port 53" >> $ResultLog
 lsof -i :53 | awk '{print $2, $1}' >> $ResultLog
 echo "==============================================" >> $ResultLog
 
+
 echo "======================================================" 
 echo "======================================================" 
 echo "The script is completed and the results are found in $ResultLog, please attach to your support ticket"
 open $HOME/Downloads/DNSFilterLogs
 echo "======================================================"
-echo "======================================================"
+echo "======================================================" 
