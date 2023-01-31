@@ -27,8 +27,12 @@ echo "Checking to see if 'DNSFilter Agent' is active..."
 echo "======================================================"
 if (sudo launchctl list | grep -q "com.dnsfilter.agent.macos.helper"); then
   echo "DNSFilter Agent is active" >> $ResultLog
+ cat /Library/Application\ Support/DNSFilter\ Agent/daemon.info | grep "Version" >> $ResultLog
+
 else
   echo "DNSFilter Agent is not active" >> $ResultLog
+cat /Library/Application\ Support/DNS\ Agent/daemon.info | grep "Version" >> $ResultLog
+
 fi
 
 echo "======================================================" >> $ResultLog
