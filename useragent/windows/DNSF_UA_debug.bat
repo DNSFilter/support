@@ -67,6 +67,18 @@ IF %errorlevel%==1722 ECHO hyperv test inconclusive >> %debugfile%
 ECHO --------------------------- >> %debugfile%
 Echo:
 Echo:
+ECHO Checking for WSL
+ECHO --------------------------- >> %debugfile%
+dism.exe /online /Get-Features /Format:Table | find "Microsoft-Windows-Subsystem-Linux" | find "Enabled" >nul
+if %errorlevel%==0 (
+    echo WSL is enabled. >> %debugfile%
+) else (
+    echo WSL is not enabled. >> %debugfile%
+)
+
+ECHO --------------------------- >> %debugfile%
+Echo:
+Echo:
 ECHO Querying the agent service
 ECHO --------------------------- >> %debugfile%
 ECHO QUERYING THE AGENT SERVICE  >> %debugfile%
@@ -124,8 +136,8 @@ xcopy /S /I /Q /Y /F "C:\Program Files\DNS Agent\logs.txt" "C:\temp\"
 ECHO COPY COMPLETE
 ECHO FINISHED!!
 ECHO THE RESULTS OF DEBUGGER HAVE BEEN WRITTEN TO %debugfile%
-ECHO OPENING “%WORKDIR%”
-explorer “%WORKDIR%”
+ECHO OPENING "%WORKDIR%"
+explorer "%WORKDIR%"
 ECHO ALL LOGS HAVE BEEN COLLECETED, PLEASE PROVIDE TO SUPPORT.
 Echo:
 Echo:
