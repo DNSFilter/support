@@ -1,0 +1,5 @@
+orgName,networkName,ipAddresses,physicalAddress,externalId
+Organization 1,Network 1,123.456.789.123,"123 1st St, Wichita KS, 67213", "External_id 1"
+Organization 1,Network 2,123.456.789.124,"456 1st St, Wichita KS, 67213", "External_id 2"
+Organization 2,Network 1,123.456.789.125,"789 1st St, Wichita KS, 67213", "External_id 3"
+Organization 2,Network 2,123.456.789.126,"134 1st St, Wichita KS, 67213", "External_id 4"
