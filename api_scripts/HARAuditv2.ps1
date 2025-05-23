@@ -1,7 +1,6 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-
 # Secure API Key Input
 function Get-ApiKey {
     $form = New-Object System.Windows.Forms.Form
@@ -51,9 +50,6 @@ function Get-ApiKey {
 }
 
 
-
-
-
 # Prompt user to select HAR file
 function Get-FileDialog {
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -101,8 +97,6 @@ if (Test-Path $lookupCachePath) {
         Write-Warning "Failed to load cached category data."
     }
 }
-
-# --- Subnet and IP Match References ---
 
 # Known subnets to flag in loopback results
 $targetSubnets = @(
@@ -253,9 +247,6 @@ foreach ($ip in $ipToMeta.Keys) {
     } catch {
         $geoError = $_.Exception.Message
     }
-
-
-
 
     $loopbackResult = @()
     $loopbackErrorFlags = @()
