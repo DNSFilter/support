@@ -1,10 +1,9 @@
-﻿Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-#API Key Input
-function Get-ApiKey {
-    Add-Type -AssemblyName System.Windows.Forms
 
+# Secure API Key Input
+function Get-ApiKey {
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "DNSFilter API Key"
     $form.Width = 400
@@ -44,13 +43,12 @@ function Get-ApiKey {
     $form.Controls.Add($cancelButton)
 
     if ($form.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK -or [string]::IsNullOrWhiteSpace($textbox.Text)) {
-        Write-Host "" No API key entered. Exiting script."
+        Write-Host "No API key entered. Exiting script."
         exit 1
     }
 
     return $textbox.Text
 }
-
 
 # Prompt user to select HAR file
 function Get-FileDialog {
@@ -74,7 +72,7 @@ function Get-SaveFileDialog {
     $dialog.FileName = "HARAudit" + (Get-Date -Format "yyyyMMdd_HHmm") + ".csv"
     $dialog.InitialDirectory = [Environment]::GetFolderPath("Desktop")
     if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
-        Write-Host "❌ No save path selected. Exiting script."
+        Write-Host "No save path selected. Exiting script."
         exit 1
     }
     return $dialog.FileName
@@ -172,7 +170,7 @@ if (Test-Path $lookupCachePath) {
             $fqdnToCategories[$_.Name] = $_.Value
         } | Out-Null
     } catch {
-        Write-Warning "⚠️ Failed to load cached category data."
+        Write-Warning "Failed to load cached category data."
     }
 }
 
@@ -213,8 +211,8 @@ foreach ($ip in $ipToMeta.Keys) {
     $fqdnList = ($meta.FQDNs | Sort-Object) -join ", "
     $urlList = ($meta.URLs | Sort-Object -Unique) -join "; "
     $statuses = ($meta.Statuses | Sort-Object -Unique) -join ", "
-    $avgTimeMs = "{0:N0}" -f ($meta.Times | Measure-Object -Average).Average
-    $maxTimeMs = "{0:N0}" -f ($meta.Times | Measure-Object -Maximum).Maximum
+    $avgTimeMs = "{0:N0}" -f (($meta.Times | Measure-Object -Average).Average)
+    $maxTimeMs = "{0:N0}" -f (($meta.Times | Measure-Object -Maximum).Maximum)
     $firstSeen = ($meta.StartTimes | Sort-Object)[0]
      # --- GEOLOCATION ---
     $country = $region = $city = $isp = $lat = $lon = $geoError = ""
