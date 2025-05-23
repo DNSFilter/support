@@ -50,6 +50,10 @@ function Get-ApiKey {
     return $textbox.Text
 }
 
+
+
+
+
 # Prompt user to select HAR file
 function Get-FileDialog {
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -98,24 +102,40 @@ if (Test-Path $lookupCachePath) {
     }
 }
 
-# Subnet and category match references
-$targetSubnet = [IPAddress]"45.253.131.0"
-$targetMask   = [IPAddress]"255.255.255.0"
+# --- Subnet and IP Match References ---
+
+# Known subnets to flag in loopback results
+$targetSubnets = @(
+    @{ Subnet = [IPAddress]"45.253.131.0"; Mask = [IPAddress]"255.255.255.0" },  # /16
+    @{ Subnet = [IPAddress]"45.54.0.0";     Mask = [IPAddress]"255.255.0.0" }    # /16
+)
+
+# Explicit category IPs
 $debugIPs   = @("45.253.131.16")
-$errorIPs   = @("45.253.131.216")
+$errorIPs   = @("45.253.131.216", "45.54.28.16")
 $unknownIPs = @("45.253.131.226", "45.253.131.236")
 
-function InTargetSubnet($testIp) {
+# Checks if an IP falls within a given subnet and mask
+function InSubnet($ip, $subnet, $mask) {
     try {
-        $ip = [IPAddress]::Parse($testIp)
-        $b1 = $ip.GetAddressBytes()
-        $b2 = $targetSubnet.GetAddressBytes()
-        $m  = $targetMask.GetAddressBytes()
+        $b1 = ([IPAddress]$ip).GetAddressBytes()
+        $b2 = $subnet.GetAddressBytes()
+        $m  = $mask.GetAddressBytes()
         for ($i = 0; $i -lt 4; $i++) {
             if (($b1[$i] -band $m[$i]) -ne ($b2[$i] -band $m[$i])) { return $false }
         }
         return $true
     } catch { return $false }
+}
+
+# Checks if an IP matches any known subnet
+function InAnyTargetSubnet($ip) {
+    foreach ($target in $targetSubnets) {
+        if (InSubnet $ip $target.Subnet $target.Mask) {
+            return $true
+        }
+    }
+    return $false
 }
 
 # Parse HAR
@@ -240,29 +260,38 @@ foreach ($ip in $ipToMeta.Keys) {
     $loopbackResult = @()
     $loopbackErrorFlags = @()
     foreach ($fqdn in $meta.FQDNs) {
-        try {
-            $res = Resolve-DnsName -Name $fqdn -Server "127.0.0.2" -ErrorAction Stop
-            $aRecords = ($res | Where-Object { $_.Type -eq "A" }).IPAddress
-            if ($aRecords) {
-                $loopbackResult += "$fqdn → $($aRecords -join ', ')"
-                foreach ($resolvedIp in $aRecords) {
-                    if ($debugIPs -contains $resolvedIp) { $loopbackErrorFlags += "Match (debug)" }
-                    elseif ($errorIPs -contains $resolvedIp) { $loopbackErrorFlags += "Match (error)" }
-                    elseif ($unknownIPs -contains $resolvedIp) { $loopbackErrorFlags += "Match (unknown)" }
-                    elseif (InTargetSubnet $resolvedIp) { $loopbackErrorFlags += "Subnet match" }
+    try {
+        $res = Resolve-DnsName -Name $fqdn -Server "127.0.0.2" -ErrorAction Stop
+        $aRecords = ($res | Where-Object { $_.Type -eq "A" }).IPAddress
+
+        if ($aRecords) {
+            $loopbackResult += "$fqdn → $($aRecords -join ', ')"
+
+            foreach ($resolvedIp in $aRecords) {
+                if ($debugIPs -contains $resolvedIp) {
+                    $loopbackErrorFlags += "Match (debug)"
+                } elseif ($errorIPs -contains $resolvedIp) {
+                    $loopbackErrorFlags += "Match (error)"
+                } elseif ($unknownIPs -contains $resolvedIp) {
+                    $loopbackErrorFlags += "Match (unknown)"
+                } elseif (InTargetSubnet $resolvedIp) {
+                    $loopbackErrorFlags += "Subnet match"
                 }
-            } else {
-                $loopbackResult += "$fqdn → NO A record"
             }
-        } catch {
-            if ($_.Exception.Message -match "timed out" -or $_.Exception.Message -match "Timeout") {
-                $loopbackErrorFlags += "Timeout"
-            } else {
-                $loopbackErrorFlags += "DNS failure"
-            }
-            $loopbackResult += "$fqdn → FAILED: $_"
+        } else {
+            $loopbackResult += "$fqdn → NO A record"
         }
+
+    } catch {
+        if ($_.Exception.Message -match "timed out" -or $_.Exception.Message -match "Timeout") {
+            $loopbackErrorFlags += "Timeout"
+        } else {
+            $loopbackErrorFlags += "DNS failure"
+        }
+        $loopbackResult += "$fqdn → FAILED: $_"
     }
+}
+
 
     $loopbackError = if ($loopbackErrorFlags.Count -gt 0) {
         ($loopbackErrorFlags | Sort-Object -Unique) -join "; "
