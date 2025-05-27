@@ -1,6 +1,9 @@
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
+$lookupErrorLog = "$env:TEMP\dnsfilter_lookup_errors.log"
+Remove-Item -Path $lookupErrorLog -ErrorAction SilentlyContinue
+
 # Prompt user to select HAR file
 function Get-FileDialog {
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
@@ -8,7 +11,7 @@ function Get-FileDialog {
     $dialog.Filter = "HAR files (*.har)|*.har"
     $dialog.InitialDirectory = [Environment]::GetFolderPath("Desktop")
     if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) {
-        Write-Host " No file selected. Exiting script."
+        Write-Host "No file selected. Exiting script."
         exit 1
     }
     return $dialog.FileName
@@ -33,11 +36,19 @@ function Get-SaveFileDialog {
 $harPath = Get-FileDialog
 $outputCsv = Get-SaveFileDialog
 
-# Parse HAR
+# Parse HAR file
 $har = Get-Content $harPath -Raw | ConvertFrom-Json
+
+if (-not $har) {
+    Write-Host "Failed to parse HAR file. Exiting script."
+    exit 1
+}
+
 $entries = $har.log.entries
 $fqdnToUrls = @{}
 $ipToMeta = @{}
+
+Write-Host "Found $($entries.Count) entries in HAR file."
 
 foreach ($entry in $entries) {
     try {
@@ -48,6 +59,12 @@ foreach ($entry in $entries) {
         $status = $entry.response.status
         $time = $entry.time
         $timestamp = $entry.startedDateTime
+
+        # Check if IP is missing and log warning
+        if (-not $ip) {
+            Write-Warning "Skipping FQDN $fqdn as no IP is specified."
+            $ip = "No IP"
+        }
 
         if (!$fqdnToUrls.ContainsKey($fqdn)) { $fqdnToUrls[$fqdn] = @() }
         $fqdnToUrls[$fqdn] += $url
@@ -70,7 +87,9 @@ foreach ($entry in $entries) {
             $ipToMeta[$ip].StartTimes += [datetime]$timestamp
             if ($status -ge 400 -or $time -gt 3000) { $ipToMeta[$ip].HasError = $true }
         }
-    } catch {}
+    } catch {
+        Write-Warning "Error processing entry: $_"
+    }
 }
 
 # Build final results
@@ -149,6 +168,12 @@ foreach ($ip in $ipToMeta.Keys) {
         LoopbackResult  = ($loopbackResult -join "; ")
         LoopbackError   = $loopbackError
     }
+}
+
+# Check if results are empty
+if ($results.Count -eq 0) {
+    Write-Host "No valid data found. Exiting script."
+    exit 1
 }
 
 # Export to CSV and open
