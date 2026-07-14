@@ -1,0 +1,84 @@
+# dnsfcli CI
+#
+# NOTE: dnsfcli lives in the dnsfcli/ subdirectory of the DNSFilter/support
+# repository, and GitHub only reads workflows from the repository root.
+# When merging into DNSFilter/support, move this file to:
+#     .github/workflows/dnsfcli-ci.yml   (at the support repo root)
+# The working-directory defaults and path filters below already assume that
+# layout, so the file works as-is once moved.
+
+name: dnsfcli CI
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["dnsfcli/**", ".github/workflows/dnsfcli-ci.yml"]
+  pull_request:
+    paths: ["dnsfcli/**", ".github/workflows/dnsfcli-ci.yml"]
+
+# CI only reads the repo — scope the workflow token to read-only.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: dnsfcli
+
+jobs:
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # setuptools ships preinstalled on the runner and is scanned by
+      # pip-audit even though dnsfcli doesn't depend on it (hatchling
+      # build) — keep it current so runner-image lag can't fail the audit
+      # (e.g. PYSEC-2026-3447, fixed in 83.0.0).
+      - run: pip install --upgrade pip pip-audit "setuptools>=83"
+      # Install the project so the audit covers dnsfcli's real dependency
+      # tree, not just the tooling environment.
+      - run: pip install -e .
+      - run: pip-audit
+
+  test:
+    name: Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest -m "not live"
+
+  package:
+    name: Build + install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install --upgrade pip build
+      - run: python -m build
+      # Install the built wheel into a clean venv and exercise the entry
+      # point — catches missing runtime dependencies that an editable
+      # install (pip install -e) silently masks.
+      - run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install dist/*.whl
+          /tmp/smoke/bin/dnsfcli --version
+          /tmp/smoke/bin/dnsfcli endpoints
+          /tmp/smoke/bin/dnsfcli networks create --template

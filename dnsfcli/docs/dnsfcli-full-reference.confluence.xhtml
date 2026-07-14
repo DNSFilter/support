@@ -1,0 +1,579 @@
+<!-- DNSFilter guide, Confluence storage format. Push via REST API (POST /wiki/rest/api/content) or paste into a Confluence page in source view. Upload the PNGs in the figures folder as page attachments so the figure references resolve. -->
+<h1>dnsfcli Reference Guide</h1>
+<p><em>Command-line interface for the DNSFilter API</em></p>
+<p>Complete command reference, tested examples, CSV bulk-import workflows, and output flag usage for every endpoint in the DNSFilter API.</p>
+<table><tbody><tr><th>Tool version</th><td>0.1.0</td></tr><tr><th>Updated</th><td>2026-07-13</td></tr><tr><th>Audience</th><td>Developers &amp; Administrators</td></tr></tbody></table>
+<hr/>
+<h2>Getting Started</h2>
+<p>dnsfcli is a command-line tool for the full DNSFilter REST API. Install it once, store your credentials in the OS keychain, and manage every aspect of your DNSFilter account from the terminal — no browser required.</p>
+<h3>1. Install</h3>
+<p>Python 3.9 or later is required.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / INSTALL</ac:parameter><ac:plain-text-body><![CDATA[pip install -e . # or run directly: python dnsfcli.py --help]]></ac:plain-text-body></ac:structured-macro>
+<h3>2. Store credentials</h3>
+<p>Your API token and default organization ID are stored in the OS keychain (macOS Keychain / Windows Credential Manager / Linux Secret Service) and used automatically on every subsequent command.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AUTH SETUP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py auth setup python dnsfcli.py auth setup --org-id 802315 python dnsfcli.py auth verify python dnsfcli.py auth show]]></ac:plain-text-body></ac:structured-macro>
+<h2>Command Structure</h2>
+<p>Every command follows the same three-part pattern.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">REFERENCE / COMMAND STRUCTURE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py [endpoint] [function] [--param value ...] # Examples python dnsfcli.py policies list python dnsfcli.py policies show --id 285109 python dnsfcli.py policies create --name "Guest WiFi" --organization_id 802315 python dnsfcli.py policies update --id 285109 --name "Updated" python dnsfcli.py policies delete --id 285109]]></ac:plain-text-body></ac:structured-macro>
+<h2>Global Flags</h2>
+<p>These flags work on any command and can appear anywhere in the argument list (before the endpoint, between endpoint and function, or after all other flags).</p>
+<h2>Discovery</h2>
+<p>Explore every available endpoint and function without leaving the terminal.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / DISCOVERY</ac:parameter><ac:plain-text-body><![CDATA[# List all 36 endpoint groups python dnsfcli.py endpoints # List all functions for one endpoint python dnsfcli.py endpoints policies # Get a pre-filled CSV template for any write operation python dnsfcli.py policies create --template python dnsfcli.py policies create --template > policies-template.csv]]></ac:plain-text-body></ac:structured-macro>
+<h2>agent-local-users</h2>
+<p>Agent local user management.</p>
+<p>Bulk delete agent local users.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS BULK-DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users bulk-delete --ids ["1001","1002","1003"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Count agent local users matching bulk-delete criteria.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS BULK-DELETE-COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users bulk-delete-counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Show a bulk-delete job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS BULK-DELETE-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users bulk-delete-show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users delete \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / AGENT-LOCAL-USERS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py agent-local-users update \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5 \ --friendly_name "Jane Smith Laptop" \ --policy_id 285109]]></ac:plain-text-body></ac:structured-macro>
+<h2>api-keys</h2>
+<p>API key management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / API-KEYS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py api-keys create --name "CI Pipeline Key" --expiry 2027-05-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / API-KEYS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py api-keys delete --id 20981]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / API-KEYS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py api-keys list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Revoke an API key immediately without deleting it.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / API-KEYS REVOKE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py api-keys revoke --id 20981]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / API-KEYS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py api-keys show --id 20981]]></ac:plain-text-body></ac:structured-macro>
+<h2>application-categories</h2>
+<p>Application category reference.</p>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / APPLICATION-CATEGORIES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py application-categories list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / APPLICATION-CATEGORIES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py application-categories show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>applications</h2>
+<p>Application catalog.</p>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / APPLICATIONS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py applications list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / APPLICATIONS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py applications list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / APPLICATIONS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py applications show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>billing</h2>
+<p>Billing and subscription.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BILLING CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py billing create \ --organization_id 802315 \ --payment_token tok_visa_4242]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve the billing address for an organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BILLING GET-ADDRESS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py billing get-address --organization_id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BILLING SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py billing show]]></ac:plain-text-body></ac:structured-macro>
+<p>Update the billing address for an organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BILLING UPDATE-ADDRESS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py billing update-address \ --organization_id 802315 \ --first_name Jane \ --last_name Smith \ --line1 "123 Main St" \ --city Denver \ --state Colorado \ --zip 80202 \ --country US]]></ac:plain-text-body></ac:structured-macro>
+<h2>block-pages</h2>
+<p>Custom block page configuration.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages create \ --name "Corporate Block Page" \ --block_org_name "Acme Corp" \ --block_email_addr admin@company.com]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / BLOCK-PAGES UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py block-pages update \ --id 12345 \ --name "Corporate Block Page Updated"]]></ac:plain-text-body></ac:structured-macro>
+<h2>categories</h2>
+<p>DNS filtering category reference.</p>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / CATEGORIES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py categories list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / CATEGORIES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py categories list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / CATEGORIES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py categories show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>collections</h2>
+<p>Collection user membership.</p>
+<p>Add a user to an organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / COLLECTIONS USERS-ADD</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py collections users-add --collection_id 7788 --id 42618]]></ac:plain-text-body></ac:structured-macro>
+<p>List users within a specific organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / COLLECTIONS USERS-LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py collections users-list --collection_id 7788]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove a user from a collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / COLLECTIONS USERS-REMOVE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py collections users-remove --collection_id 7788 --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a specific user within an organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / COLLECTIONS USERS-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py collections users-show --collection_id 7788 --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>current-user</h2>
+<p>Authenticated user profile.</p>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / CURRENT-USER SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py current-user show]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / CURRENT-USER UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py current-user update --first_name Jane --last_name Smith]]></ac:plain-text-body></ac:structured-macro>
+<h2>dictionary</h2>
+<p>API dictionary / reference data.</p>
+<p>Retrieve the list of supported QP method types.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / DICTIONARY QP-METHODS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py dictionary qp-methods]]></ac:plain-text-body></ac:structured-macro>
+<h2>domains</h2>
+<p>Domain lookup and classification.</p>
+<p>Classify multiple domains in a single request.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / DOMAINS BULK-LOOKUP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py domains bulk-lookup]]></ac:plain-text-body></ac:structured-macro>
+<p>Submit a domain for threat-intel review.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / DOMAINS SUGGEST-THREAT</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py domains suggest-threat]]></ac:plain-text-body></ac:structured-macro>
+<p>Look up a domain for an authenticated user session.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / DOMAINS USER-LOOKUP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py domains user-lookup]]></ac:plain-text-body></ac:structured-macro>
+<h2>enterprise-connections</h2>
+<p>Enterprise SSO connection management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections create \ --client_id my-client-id \ --client_secret my-secret \ --discovery_url "https://idp.company.com/.well-known/openid-configuration" \ --strategy oidc \ --display_name "Company SSO"]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ENTERPRISE-CONNECTIONS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py enterprise-connections update \ --id 12345 \ --display_name "Company SSO Updated"]]></ac:plain-text-body></ac:structured-macro>
+<h2>invoices</h2>
+<p>Invoice history.</p>
+<p>Retrieve the current billing period's invoice.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / INVOICES CURRENT</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py invoices current]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / INVOICES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py invoices list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / INVOICES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py invoices show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>ip-addresses</h2>
+<p>IP address management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses create \ --address 203.0.113.5 \ --organization_id 802315 \ --network_id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Return the public IP address of the calling client.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES MYIP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses myip]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses update --id 12345 --address 203.0.113.5]]></ac:plain-text-body></ac:structured-macro>
+<p>Verify whether an IP address is registered.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / IP-ADDRESSES VERIFY</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py ip-addresses verify]]></ac:plain-text-body></ac:structured-macro>
+<h2>mac-addresses</h2>
+<p>MAC address management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses create \ --organization_id 802315 \ --address "AA:BB:CC:DD:EE:FF" \ --filter_value "Reception Printer" \ --policy_id 285109]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / MAC-ADDRESSES UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py mac-addresses update \ --id 12345 \ --address "AA:BB:CC:DD:EE:FF" \ --filter_value "Updated Label"]]></ac:plain-text-body></ac:structured-macro>
+<h2>metrics</h2>
+<p>Organization usage metrics.</p>
+<p>Organization usage metrics.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / METRICS ORG-USAGE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py metrics org-usage --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Detailed organization usage metrics.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / METRICS ORG-USAGE-DETAILED</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py metrics org-usage-detailed --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<h2>networks</h2>
+<p>Network management.</p>
+<p>Create multiple resources in a single async job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-create]]></ac:plain-text-body></ac:structured-macro>
+<p>Check the status of a bulk-create job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-CREATE-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-create-show --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Delete multiple resources in a single async job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-DESTROY</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-destroy]]></ac:plain-text-body></ac:structured-macro>
+<p>Check the status of a bulk-destroy job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-DESTROY-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-destroy-show --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Update multiple resources in a single operation.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-update --ids 736401,736402 --policy_id 285109]]></ac:plain-text-body></ac:structured-macro>
+<p>Check the status of a bulk-update job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS BULK-UPDATE-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks bulk-update-show --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Return counts of resources matching optional filters.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks create \ --name "HQ Network" \ --organization_id 802315 \ --policy_ids ["285109"] \ --physical_address "123 Main St, Denver CO"]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks delete --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Return geographic information for resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS GEO</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks geo]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single LAN IP address entry.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LAN-IP-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks lan-ip-show --id 736401 --lan_ip_id 9901]]></ac:plain-text-body></ac:structured-macro>
+<p>Update the name of a LAN IP address entry.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LAN-IP-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks lan-ip-update \ --id 736401 \ --lan_ip_id 9901 \ --name "Reception Desk"]]></ac:plain-text-body></ac:structured-macro>
+<p>List LAN IP addresses registered to a network.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LAN-IPS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks lan-ips --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Find a resource matching a specific value.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS LOOKUP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks lookup]]></ac:plain-text-body></ac:structured-macro>
+<p>List resources visible to the MSP account.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS MSP</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks msp]]></ac:plain-text-body></ac:structured-macro>
+<p>List all resources visible to the MSP account.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS MSP-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks msp-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Generate a new network secret key.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SECRET-KEY-CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks secret-key-create --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Delete the network secret key.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SECRET-KEY-DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks secret-key-delete --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Rotate the network secret key.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SECRET-KEY-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks secret-key-update --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks show --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>List all subnets across all networks.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets]]></ac:plain-text-body></ac:structured-macro>
+<p>Add a subnet IP range to a network.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS-CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets-create \ --id 736401 \ --name "Sales Floor" \ --from 10.0.1.0 \ --to 10.0.1.255]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove a subnet from a network.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS-DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets-delete --id 736401 --subnet_id 4455]]></ac:plain-text-body></ac:structured-macro>
+<p>List subnets within a specific network.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS-LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets-list --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a specific subnet.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets-show --id 736401 --subnet_id 4455]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing subnet's name or IP range.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS SUBNETS-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks subnets-update \ --id 736401 \ --subnet_id 4455 \ --name "Sales Floor Renamed" \ --from 10.0.1.0 \ --to 10.0.1.255]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / NETWORKS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py networks update \ --id 736401 \ --name "HQ Network Updated" \ --organization_id 802315]]></ac:plain-text-body></ac:structured-macro>
+<h2>organizations</h2>
+<p>Organization management.</p>
+<p>Update multiple resources in a single operation.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS BULK-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations bulk-update \ --organization_ids ["802315","802316"] \ --gdpr true]]></ac:plain-text-body></ac:structured-macro>
+<p>Cancel an organization's subscription.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS CANCEL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations cancel --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations create \ --name "New Client Corp" \ --billing_contact_email admin@company.com \ --sku professional]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations delete --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve organization-level settings.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS SETTINGS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations settings]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations show --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations update \ --id 802315 \ --name "New Client Corp Updated"]]></ac:plain-text-body></ac:structured-macro>
+<p>Add a new user to an organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-create \ --organization_id 802315 \ --email admin@company.com \ --first_name Jane \ --last_name Smith \ --role administrator]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove a user from an organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-delete \ --organization_id 802315 \ --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>List users within a specific organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-list --organization_id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Re-send the email invitation to an org user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-RESEND-INVITE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-resend-invite \ --organization_id 802315 \ --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a specific user within an organization or collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-show --organization_id 802315 --id 802315]]></ac:plain-text-body></ac:structured-macro>
+<p>Update a user's role or details within an organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / ORGANIZATIONS USERS-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py organizations users-update \ --organization_id 802315 \ --id 802315 \ --role read_only]]></ac:plain-text-body></ac:structured-macro>
+<h2>policies</h2>
+<p>DNS filtering policy management.</p>
+<p>Allow a specific application on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES ADD-ALLOWED-APPLICATION</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies add-allowed-application --id 12345 --name TikTok]]></ac:plain-text-body></ac:structured-macro>
+<p>Block all domains in a category on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES ADD-BLACKLIST-CATEGORY</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies add-blacklist-category --id 12345 --category_id 2]]></ac:plain-text-body></ac:structured-macro>
+<p>Block a specific domain on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES ADD-BLACKLIST-DOMAIN</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies add-blacklist-domain \ --id 12345 \ --domain malware.example.com \ --note "Flagged by threat intel"]]></ac:plain-text-body></ac:structured-macro>
+<p>Block a specific application on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES ADD-BLOCKED-APPLICATION</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies add-blocked-application --id 12345 --name TikTok]]></ac:plain-text-body></ac:structured-macro>
+<p>Allow a specific domain on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES ADD-WHITELIST-DOMAIN</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies add-whitelist-domain \ --id 12345 \ --domain internal.corp.com]]></ac:plain-text-body></ac:structured-macro>
+<p>List policies with application filtering enabled.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES APPLICATION</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies application]]></ac:plain-text-body></ac:structured-macro>
+<p>Update application filtering settings across policies.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES APPLICATION-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies application-update]]></ac:plain-text-body></ac:structured-macro>
+<p>Add domains to the allowlist on multiple policies at once.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES BULK-ADD-ALLOWLIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies bulk-add-allowlist \ --policy_ids ["285109","331207"] \ --domains ["safe.com","trusted.org"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Add domains to the blocklist on multiple policies at once.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES BULK-ADD-BLOCKLIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies bulk-add-blocklist \ --policy_ids ["285109","331207"] \ --domains ["evil.com","malware.net"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove domains from the allowlist on multiple policies.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES BULK-REMOVE-ALLOWLIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies bulk-remove-allowlist \ --policy_ids ["285109"] \ --domains ["safe.com"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove domains from the blocklist on multiple policies.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES BULK-REMOVE-BLOCKLIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies bulk-remove-blocklist \ --policy_ids ["285109"] \ --domains ["evil.com"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies create \ --name "Guest WiFi" \ --organization_id 802315 \ --allow_unknown_domains true \ --google_safesearch true \ --youtube_restricted true \ --youtube_restricted_level strict]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Check whether permissive mode is enabled for a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES PERMISSIVE-MODE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies permissive-mode --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove an application from the allowlist on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES REMOVE-ALLOWED-APPLICATION</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies remove-allowed-application --id 12345 --name TikTok]]></ac:plain-text-body></ac:structured-macro>
+<p>Unblock a category on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES REMOVE-BLACKLIST-CATEGORY</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies remove-blacklist-category --id 12345 --category_id 2]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove a domain from the blocklist on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES REMOVE-BLACKLIST-DOMAIN</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies remove-blacklist-domain \ --id 12345 \ --domain malware.example.com]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove an application from the blocklist on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES REMOVE-BLOCKED-APPLICATION</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies remove-blocked-application --id 12345 --name TikTok]]></ac:plain-text-body></ac:structured-macro>
+<p>Remove a domain from the allowlist on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES REMOVE-WHITELIST-DOMAIN</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies remove-whitelist-domain \ --id 12345 \ --domain internal.corp.com]]></ac:plain-text-body></ac:structured-macro>
+<p>Enable or disable permissive mode on a policy.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES SET-PERMISSIVE-MODE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies set-permissive-mode --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICIES UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policies update \ --id 12345 \ --name "Guest WiFi Updated" \ --organization_id 802315 \ --interstitial true]]></ac:plain-text-body></ac:structured-macro>
+<h2>policy-ips</h2>
+<p>Policy IP associations.</p>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICY-IPS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policy-ips list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / POLICY-IPS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py policy-ips show --id 285109]]></ac:plain-text-body></ac:structured-macro>
+<h2>psa-integrations</h2>
+<p>PSA integration links.</p>
+<p>Get the PSA integration redirect link.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / PSA-INTEGRATIONS REDIRECT-LINK</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py psa-integrations redirect-link]]></ac:plain-text-body></ac:structured-macro>
+<h2>scheduled-policies</h2>
+<p>Scheduled policy management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies create \ --name "School Hours" \ --organization_id 802315 \ --policy_ids ["285109"] \ --timezone America/Denver]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-POLICIES UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-policies update \ --id 12345 \ --name "School Hours Updated" \ --timezone America/Chicago]]></ac:plain-text-body></ac:structured-macro>
+<h2>scheduled-reports</h2>
+<p>Scheduled report management.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports create \ --organization_id 802315 \ --frequency weekly \ --day_of_week 1 \ --include_threat_summary true \ --send_to_dashboard_users true]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports delete --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Generate an immediate preview of a scheduled report.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS PREVIEW-CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports preview-create \ --organization_id 802315 \ --include_threat_summary true]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve the result of a report preview job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS PREVIEW-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports preview-show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / SCHEDULED-REPORTS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py scheduled-reports update --id 12345 --frequency monthly]]></ac:plain-text-body></ac:structured-macro>
+<h2>traffic-reports</h2>
+<p>DNS traffic analytics and reporting (all GET).</p>
+<p>Queries per second.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QPS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports qps \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>QPS for active agents.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QPS-ACTIVE-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports qps-active-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>QPS for active collections.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QPS-ACTIVE-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports qps-active-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>QPS for active organizations.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QPS-ACTIVE-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports qps-active-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>QPS for active users.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QPS-ACTIVE-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports qps-active-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Query log export.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS QUERY-LOGS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports query-logs \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top agents by query volume.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top application categories.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-APPLICATION-CATEGORIES</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-application-categories \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top DNS categories.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-CATEGORIES</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-categories \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top collections by query volume.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top queried domains.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-DOMAINS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-domains \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top networks by query volume.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-NETWORKS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-networks \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top organizations by query volume.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top organizations by request count.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-ORGANIZATIONS-REQUESTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-organizations-requests \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Top users by query volume.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOP-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports top-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats by agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-AGENTS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-agents-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-COLLECTIONS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-collections-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats by network.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-NETWORKS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-networks-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-ORGANIZATIONS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-organizations-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total application stats by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-APPLICATIONS-USERS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-applications-users-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total queries by category.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORIES</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-categories \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total category stats by agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORIES-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-categories-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total category stats by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORIES-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-categories-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total category stats by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORIES-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-categories-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total category stats by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORIES-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-categories-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total category stats.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CATEGORY-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-category-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total client (agent) stats.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-CLIENT-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-client-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total queries by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total collection stats by agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-COLLECTIONS-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-collections-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total collection stats by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-COLLECTIONS-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-collections-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total collection stats by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-COLLECTIONS-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-collections-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total deployments.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DEPLOYMENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-deployments \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests per domain.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAIN-REQUESTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domain-requests \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total domain stats.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAIN-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domain-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total unique domains queried.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAINS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domains \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total domains by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAINS-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domains-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total domains by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAINS-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domains-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total domains by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-DOMAINS-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-domains-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-ORGANIZATIONS-REQUESTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-organizations-requests \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total stats by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-ORGANIZATIONS-STATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-organizations-stats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total DNS requests.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by geography.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS-GEO</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests-geo \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total requests by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-REQUESTS-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-requests-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total roaming client stats.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-ROAMING-CLIENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-roaming-clients \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total threats blocked.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-THREATS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-threats \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total threats by agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-THREATS-AGENTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-threats-agents \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total threats by collection.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-THREATS-COLLECTIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-threats-collections \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total threats by organization.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-THREATS-ORGANIZATIONS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-threats-organizations \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<p>Total threats by user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / TRAFFIC-REPORTS TOTAL-THREATS-USERS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py traffic-reports total-threats-users \ --start_date 2025-01-01 \ --end_date 2025-01-31]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agent-bulk-deletes</h2>
+<p>Bulk agent deletion jobs.</p>
+<p>Return counts of resources matching optional filters.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-DELETES COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-deletes counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-DELETES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-deletes create \ --ids ["9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-DELETES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-deletes show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agent-bulk-updates</h2>
+<p>Bulk agent update jobs.</p>
+<p>Return counts of resources matching optional filters.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-UPDATES COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-updates counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-UPDATES CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-updates create \ --ids ["9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5"] \ --policy_id 285109]]></ac:plain-text-body></ac:structured-macro>
+<p>Check whether the selected agents have mixed field values.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-UPDATES HAS-MIXED</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-updates has-mixed \ --ids ["9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-BULK-UPDATES SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-bulk-updates show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agent-cleanups</h2>
+<p>Agent cleanup jobs.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-CLEANUPS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-cleanups create \ --organization_ids ["802315"] \ --inactive_for 30]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-CLEANUPS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-cleanups show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-CLEANUPS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-cleanups update \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5 \ --start true \ --inactive_for 30]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agent-csv-exports</h2>
+<p>Agent CSV export jobs.</p>
+<p>Create a new resource.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-CSV-EXPORTS CREATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-csv-exports create --organization_ids ["802315"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-CSV-EXPORTS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-csv-exports show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agent-releases</h2>
+<p>Agent release information.</p>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-RELEASES LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-releases list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve the relay channel's latest agent release.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENT-RELEASES RELAY</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agent-releases relay]]></ac:plain-text-body></ac:structured-macro>
+<h2>user-agents</h2>
+<p>Roaming agent (client) management.</p>
+<p>Return counts of resources matching optional filters.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Export all roaming agents to CSV format.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS CSV</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents csv]]></ac:plain-text-body></ac:structured-macro>
+<p>Permanently delete a resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS DELETE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents delete --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>Dequeue a pending uninstall request for an agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS DEQUEUE-UNINSTALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents dequeue-uninstall]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents show --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<p>List all tags assigned to roaming agents.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS TAGS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents tags]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve the uninstall PIN for roaming agents.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS UNINSTALL-PIN</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents uninstall-pin]]></ac:plain-text-body></ac:structured-macro>
+<p>Update an existing resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USER-AGENTS UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py user-agents update \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5 \ --friendly_name Finance-Laptop \ --policy_id 285109 \ --tags ["managed","finance"]]]></ac:plain-text-body></ac:structured-macro>
+<h2>users</h2>
+<p>User management.</p>
+<p>Change the current user's password.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USERS CHANGE-PASSWORD</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py users change-password --new_password NewSecurePass123!]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a paginated list of resources.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USERS LIST</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py users list --page 1 --per_page 25]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve all resources without pagination limits.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USERS LIST-ALL</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py users list-all]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve a single resource by ID.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / USERS SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py users show --id 12345]]></ac:plain-text-body></ac:structured-macro>
+<h2>v2-agent-local-users</h2>
+<p>v2 Agent local user endpoints.</p>
+<p>Return counts of resources matching optional filters.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-AGENT-LOCAL-USERS COUNTS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-agent-local-users counts]]></ac:plain-text-body></ac:structured-macro>
+<p>Create an async CSV export job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-AGENT-LOCAL-USERS CSV-EXPORT</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-agent-local-users csv-export --organization_ids ["802315"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Check the status of a CSV export job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-AGENT-LOCAL-USERS CSV-EXPORT-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-agent-local-users csv-export-show \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<h2>v2-current-user</h2>
+<p>v2 Current user endpoints.</p>
+<p>Suppress the license warning for the current user.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-CURRENT-USER SUPPRESS-LICENSE-WARNING</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-current-user suppress-license-warning]]></ac:plain-text-body></ac:structured-macro>
+<p>Retrieve the current user's UI settings.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-CURRENT-USER UI-SETTINGS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-current-user ui-settings]]></ac:plain-text-body></ac:structured-macro>
+<p>Update the current user's UI settings.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-CURRENT-USER UI-SETTINGS-UPDATE</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-current-user ui-settings-update --theme_mode dark]]></ac:plain-text-body></ac:structured-macro>
+<h2>v2-dictionary</h2>
+<p>v2 Dictionary / reference data.</p>
+<p>List available Cyber Sight activity types.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-DICTIONARY CYBER-SIGHT-ACTIVITY-TYPES</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-dictionary cyber-sight-activity-types]]></ac:plain-text-body></ac:structured-macro>
+<p>List available VPN settings state types.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-DICTIONARY VPN-SETTINGS-STATE-TYPES</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-dictionary vpn-settings-state-types]]></ac:plain-text-body></ac:structured-macro>
+<h2>v2-networks</h2>
+<p>v2 Network export endpoints.</p>
+<p>Create an async CSV export job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-NETWORKS CSV-EXPORT</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-networks csv-export --organization_ids ["802315"]]]></ac:plain-text-body></ac:structured-macro>
+<p>Check the status of a CSV export job.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-NETWORKS CSV-EXPORT-SHOW</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-networks csv-export-show --id 736401]]></ac:plain-text-body></ac:structured-macro>
+<h2>v2-user-agents</h2>
+<p>v2 Agent management.</p>
+<p>Update settings for a specific roaming agent.</p>
+<ac:structured-macro ac:name="code" ac:schema-version="1"><ac:parameter ac:name="title">SHELL / V2-USER-AGENTS UPDATE-SETTINGS</ac:parameter><ac:plain-text-body><![CDATA[python dnsfcli.py v2-user-agents update-settings \ --id 9b2f6c04-5a1e-4d37-8c2a-f0e1d2c3b4a5]]></ac:plain-text-body></ac:structured-macro>
+<hr/><p><em>From the team at</em></p><p><strong>DNSFilter</strong></p>
