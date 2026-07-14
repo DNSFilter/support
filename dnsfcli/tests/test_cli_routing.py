@@ -150,9 +150,20 @@ class TestRawFlag:
 # --csv flag
 # ---------------------------------------------------------------------------
 
+# Three tests below exercise --to-csv against the real /v1/categories
+# endpoint, so they need a token and network — same contract as test_live.py.
+# Without the guard they pass on developer machines by silently falling back
+# to keychain credentials, then fail in CI where no keychain exists.
+_requires_live_key = pytest.mark.skipif(
+    not LIVE_API_KEY, reason="requires DNSF_TEST_API_KEY (live API test)"
+)
+
+
 class TestCsvFlag:
     """--csv FILE should work regardless of where it appears in the command line."""
 
+    @pytest.mark.live
+    @_requires_live_key
     @pytest.mark.parametrize("argv_builder", [
         # after all other flags
         lambda f: ["categories", "list", "--api-key", LIVE_API_KEY, "--to-csv", f],
@@ -173,6 +184,8 @@ class TestCsvFlag:
         assert result.returncode == 0, f"Exit {result.returncode}: {result.stderr}"
         assert Path(out).exists(), "--csv did not create the file"
 
+    @pytest.mark.live
+    @_requires_live_key
     def test_csv_file_has_header_row(self, tmp_path):
         import subprocess, csv as csv_mod
         from tests.conftest import CLI_SCRIPT, PROJECT_DIR
@@ -188,6 +201,8 @@ class TestCsvFlag:
         assert len(rows) >= 2          # header + at least one data row
         assert "id" in rows[0]         # DNSFilter categories always have an id
 
+    @pytest.mark.live
+    @_requires_live_key
     def test_csv_stdout_shows_success_message(self, tmp_path):
         import subprocess
         from tests.conftest import CLI_SCRIPT, PROJECT_DIR
