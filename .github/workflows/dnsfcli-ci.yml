@@ -16,6 +16,10 @@ on:
   pull_request:
     paths: ["dnsfcli/**", ".github/workflows/dnsfcli-ci.yml"]
 
+# CI only reads the repo — scope the workflow token to read-only.
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: dnsfcli
@@ -26,10 +30,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install --upgrade pip pip-audit
+      # setuptools ships preinstalled on the runner and is scanned by
+      # pip-audit even though dnsfcli doesn't depend on it (hatchling
+      # build) — keep it current so runner-image lag can't fail the audit
+      # (e.g. PYSEC-2026-3447, fixed in 83.0.0).
+      - run: pip install --upgrade pip pip-audit "setuptools>=83"
+      # Install the project so the audit covers dnsfcli's real dependency
+      # tree, not just the tooling environment.
+      - run: pip install -e .
       - run: pip-audit
 
   test:
@@ -40,6 +53,8 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -51,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
