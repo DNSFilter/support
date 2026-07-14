@@ -124,7 +124,8 @@ BODY = """
 
 <div class="prompt">
   <div class="prompt-label">SHELL / INSTALL</div>
-  <div class="prompt-body">pip install "git+https://github.com/DNSFilter/support.git#subdirectory=dnsfcli"
+  <div class="prompt-body">pip install "git+https://github.com/DNSFilter/support.git@dnsfcli-v0.1.0#subdirectory=dnsfcli"
+# (drop @dnsfcli-v0.1.0 to track the latest development version)
 # or, from a local clone:
 git clone https://github.com/DNSFilter/support
 cd support/dnsfcli

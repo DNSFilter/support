@@ -35,7 +35,7 @@ Python 3.11 or later is required. Install with pip from the project root.
 
 ```text
 # SHELL / INSTALL
-pip install "git+https://github.com/DNSFilter/support.git#subdirectory=dnsfcli" # or, from a local clone: git clone https://github.com/DNSFilter/support cd support/dnsfcli pip install -e . # installs: typer, click, httpx, keyring, rich
+pip install "git+https://github.com/DNSFilter/support.git@dnsfcli-v0.1.0#subdirectory=dnsfcli" # (drop @dnsfcli-v0.1.0 to track the latest development version) # or, from a local clone: git clone https://github.com/DNSFilter/support cd support/dnsfcli pip install -e . # installs: typer, click, httpx, keyring, rich
 ```
 
 ### 3. Run directly or as a module

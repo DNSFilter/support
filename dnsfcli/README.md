@@ -8,13 +8,16 @@ Python 3.11 or later.
 
 ## Installation
 
-Install directly from the repository:
+Install a pinned release directly from the repository (recommended —
+the tag guarantees exactly which code you get):
 
 ```sh
-pip install "git+https://github.com/DNSFilter/support.git#subdirectory=dnsfcli"
+pip install "git+https://github.com/DNSFilter/support.git@dnsfcli-v0.1.0#subdirectory=dnsfcli"
 ```
 
-Re-run the same command to upgrade. Or work from a local clone:
+To track the latest development version instead, drop the tag
+(`...support.git#subdirectory=dnsfcli`) and re-run the command to
+upgrade. Or work from a local clone:
 
 ```sh
 git clone https://github.com/DNSFilter/support
