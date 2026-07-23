@@ -218,9 +218,10 @@ _OPTION_SPECS = [
         help="Split --from-csv / --from-json input into chunks of N rows each."),
     click.option("--retry", "retry", cls=_PanelOption, rich_help_panel="Batch",
         default=None, type=int, metavar="N",
-        help="Retry failed batch rows up to N times (5xx only, exponential back-off). Default: 0. "
-        "CAUTION: a 5xx can mean the write partly succeeded server-side, so retrying a "
-        "create/POST may produce duplicates. Prefer this for idempotent updates."),
+        help="Retry failed batch rows up to N times on 5xx, with exponential back-off. Default: 0. "
+        "Only idempotent methods (GET/PUT/DELETE) are retried; POST/PATCH rows are NOT retried "
+        "(a failed write may have applied server-side, so retrying could create duplicates) — "
+        "re-run the --errors-to-csv file after checking."),
     click.option("--errors-to-csv", "errors_csv", cls=_PanelOption, rich_help_panel="Batch",
         default=None, metavar="FILE",
         help="Write input rows that failed (after retries) to FILE for later reprocessing."),
@@ -247,7 +248,8 @@ _OPTION_SPECS = [
         help="Print the resolved HTTP request (method, URL, body) without executing it."),
     click.option("--wait", "wait", cls=_PanelOption, rich_help_panel="Request",
         is_flag=True, default=False,
-        help="For async operations: poll until the job completes, then display the final result."),
+        help="For async operations: poll until the job completes, then display the final result. "
+             "Exits non-zero if the job fails, times out (--max-wait), or its status can't be determined."),
     click.option("--timing", "timing", cls=_PanelOption, rich_help_panel="Request",
         is_flag=True, default=False,
         help="Print request duration to stderr after each API call."),
