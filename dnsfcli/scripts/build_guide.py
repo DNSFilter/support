@@ -1,11 +1,14 @@
 """DNSFilter brand-locked guide builder.
 
-Renders the same DNSFilter-branded guide content into four formats:
-  - PDF                (final delivery, brand-perfect)
+Renders the same DNSFilter-branded guide content into three formats:
   - Markdown (.md)     (GitHub-flavored, README-style sharing)
   - DOCX (.docx)       (editable handoff, comments, reviewers)
   - Confluence (.xhtml)(storage format, push to Confluence via REST API
                         or paste into a "view source" editor)
+
+PDF output is disabled by default (not shipped in the repo). The WeasyPrint
+renderer is still present (render_pdf) but is only exercised if "pdf" is added
+back to FORMATS, in which case `pip install weasyprint` is required.
 
 Run in place from this assets directory, or copy alongside its `fonts/`
 and `logos/` siblings. The script self-resolves those folders via __file__.
@@ -27,7 +30,8 @@ Brand rules baked in (do not override):
 
 Voice and structure are flexible. Palette and typography are not.
 
-Requires: pip install weasyprint beautifulsoup4 python-docx cairosvg
+Requires: pip install beautifulsoup4 python-docx cairosvg
+         (plus weasyprint only if PDF output is re-enabled — see FORMATS).
 """
 
 import io
@@ -43,7 +47,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
-from weasyprint import CSS, HTML
+# NOTE: weasyprint (heavy: needs system Pango/Cairo) is imported lazily inside
+# render_pdf so the default md/docx/confluence build runs without it installed.
 
 ASSETS = Path(__file__).resolve().parent
 FONTS = ASSETS / "fonts"
@@ -55,7 +60,7 @@ LOGOS = ASSETS / "logos"
 
 OUT_DIR = Path(".")
 OUT_BASENAME = "dnsfcli-reference"
-FORMATS = ["pdf", "md", "docx", "confluence"]  # build all by default
+FORMATS = ["md", "docx", "confluence"]  # PDF disabled (add "pdf" + weasyprint to re-enable)
 
 # Cover styles:
 #   "minimal" - white background, logo top-left, large title (default for
@@ -1283,6 +1288,7 @@ a {{ color: {DNSF_BLUE}; text-decoration: none; border-bottom: 0.5pt solid {DNSF
 
 
 def render_pdf(out_path):
+    from weasyprint import CSS, HTML  # lazy: only needed when PDF is enabled
     doc = (
         '<!DOCTYPE html><html><head><meta charset="utf-8">'
         f'<title>{COVER_FIELDS["title"]}</title></head><body>'

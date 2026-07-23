@@ -24,7 +24,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "src"))
 
 OUT_DIR      = pathlib.Path(__file__).parent.parent / "docs"
 OUT_BASENAME = "dnsfcli-full-reference"
-FORMATS      = ["pdf", "md", "docx", "confluence"]
+FORMATS      = ["md", "docx", "confluence"]
 COVER        = "feature"
 
 OUT_DIR.mkdir(exist_ok=True)
@@ -533,7 +533,7 @@ src = src.replace('OUT_DIR = Path(".")',       f'OUT_DIR = Path(r"{OUT_DIR}")')
 # Replace whatever OUT_BASENAME is currently set to in the template
 import re as _re
 src = _re.sub(r'OUT_BASENAME\s*=\s*"[^"]+"', f'OUT_BASENAME = "{OUT_BASENAME}"', src, count=1)
-src = src.replace('FORMATS = ["pdf", "md", "docx", "confluence"]',
+src = src.replace('FORMATS = ["md", "docx", "confluence"]',
                   f'FORMATS = {FORMATS!r}')
 src = src.replace('COVER = "minimal"', f'COVER = "{COVER}"')
 
