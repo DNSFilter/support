@@ -1,0 +1,16 @@
+$ dnsfcli networks create --name HQ --organization-id 802315 --set external_id=abc --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭──────────────── Dry Run — no request sent ────────────────╮
+│   Method          POST                                    │
+│   URL             https://api.dnsfilter.com/v1/networks   │
+│   Body            {                                       │
+│                     "name": "HQ",                         │
+│                     "organization_id": 802315,            │
+│                     "external_id": "abc"                  │
+│                   }                                       │
+╰───────────────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

@@ -1,0 +1,17 @@
+$ dnsfcli networks list --exclude note,blocked,total
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "id": "101",
+    "name": "alpha",
+    "status": "active"
+  },
+  {
+    "id": "102",
+    "name": "bravo",
+    "status": "error"
+  }
+]
+--- stderr ---
+

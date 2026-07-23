@@ -1,0 +1,9 @@
+$ dnsfcli networks create --from-json - --yes --no-progress
+--- exit: 0 ---
+--- stdout ---
+  Row 1: ✓ (id: 999)
+  Row 2: ✓ (id: 999)
+
+Done: 2/2 row(s) succeeded
+--- stderr ---
+

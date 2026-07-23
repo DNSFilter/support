@@ -103,6 +103,19 @@ def config_path() -> Path:
     return base / "dnsfcli" / "config.toml"
 
 
+def write_private_text(path: Path, content: str) -> None:
+    """Write *content* to *path* owner-only (0600) from creation.
+
+    The config may hold secrets in [bundles], so create the file at 0600
+    directly (os.open) rather than write-then-chmod, which would leave a brief
+    world-readable window. Also fchmod to tighten a pre-existing looser file.
+    """
+    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(content)
+
+
 def load_config() -> Config:
     """Load the config file.  Returns default Config if file is absent or unreadable.
 
@@ -184,4 +197,17 @@ def save_config(cfg: Config) -> None:
         if b.batch_size is not None:
             lines.append(f"batch_size  = {_toml_value(b.batch_size)}\n")
 
-    path.write_text("".join(lines), encoding="utf-8")
+    # Write atomically: a crash or Ctrl-C mid-write must never leave a
+    # truncated config.toml (which load_config would then silently discard,
+    # wiping the user's profiles/presets/bundles). Write a sibling temp file
+    # and os.replace it into place; the replace is atomic within a filesystem.
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    try:
+        # 0600 from creation (config bundles may carry stashed secrets).
+        write_private_text(tmp, "".join(lines))
+        os.replace(tmp, path)
+    finally:
+        try:
+            tmp.unlink()
+        except FileNotFoundError:
+            pass

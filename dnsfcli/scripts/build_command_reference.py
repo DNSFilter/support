@@ -32,7 +32,7 @@ if "DNSFCLI_BRAND_ASSETS" not in _os.environ:
 ASSETS = pathlib.Path(_os.environ["DNSFCLI_BRAND_ASSETS"])
 OUT_DIR      = pathlib.Path(__file__).parent.parent / "docs"
 OUT_BASENAME = "dnsfcli-command-reference"
-FORMATS      = ["pdf", "md", "docx", "confluence"]
+FORMATS      = ["md", "docx", "confluence"]
 COVER        = "feature"
 OUT_DIR.mkdir(exist_ok=True)
 

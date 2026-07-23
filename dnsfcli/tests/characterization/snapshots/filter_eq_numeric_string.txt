@@ -1,0 +1,15 @@
+$ dnsfcli networks list --filter total=100
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "id": "101",
+    "name": "alpha",
+    "status": "active",
+    "blocked": 30,
+    "total": 100,
+    "note": null
+  }
+]
+--- stderr ---
+

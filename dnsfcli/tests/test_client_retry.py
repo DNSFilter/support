@@ -103,7 +103,9 @@ class TestRateLimitRetry:
                 client = _make_client()
                 result = client.get("/v1/test")
         assert result == {"id": 1}
-        mock_sleep.assert_called_once_with(0)
+        # base Retry-After + up to 1s jitter (added to desync concurrent workers)
+        assert mock_sleep.call_count == 1
+        assert 0 <= mock_sleep.call_args[0][0] < 1
 
     def test_retry_after_header_respected(self):
         responses = [
@@ -113,7 +115,8 @@ class TestRateLimitRetry:
         with patch("httpx.Client.request", side_effect=responses):
             with patch("dnsfcli.client.time.sleep") as mock_sleep:
                 result = _make_client().get("/v1/test")
-        mock_sleep.assert_called_once_with(5)
+        assert mock_sleep.call_count == 1
+        assert 5 <= mock_sleep.call_args[0][0] < 6  # base 5 + jitter
 
     def test_default_retry_after_when_header_missing(self):
         responses = [
@@ -123,12 +126,13 @@ class TestRateLimitRetry:
         with patch("httpx.Client.request", side_effect=responses):
             with patch("dnsfcli.client.time.sleep") as mock_sleep:
                 result = _make_client().get("/v1/test")
-        # Should sleep for the default (60s per client.py)
-        mock_sleep.assert_called_once_with(60)
+        # Should sleep for the default (60s per client.py) + up to 1s jitter
+        assert mock_sleep.call_count == 1
+        assert 60 <= mock_sleep.call_args[0][0] < 61
 
     def test_retries_multiple_times_on_429(self):
-        """The client has no hard cap on 429 retries -- it keeps sleeping and retrying
-        until the server responds with a non-429 status."""
+        """The client retries 429s (once per throttle) until a non-429 status,
+        up to the hard cap _MAX_429_RETRIES (see test_429_gives_up_at_cap)."""
         responses = (
             [_make_response(429, headers={"Retry-After": "0"})] * 5
             + [_make_response(200, {"ok": True})]
@@ -139,6 +143,24 @@ class TestRateLimitRetry:
                 result = _make_client().get("/v1/test")
         assert result == {"ok": True}
         assert len(sleep_calls) == 5  # slept once per 429
+
+    def test_429_gives_up_at_cap(self):
+        """A persistently-throttling server must NOT hang the client forever:
+        after _MAX_429_RETRIES it raises instead of sleeping indefinitely."""
+        from dnsfcli.client import APIError
+        from dnsfcli.client import _MAX_429_RETRIES
+
+        # Always 429 — more responses than the cap, so we prove it gives up.
+        responses = [_make_response(429, headers={"Retry-After": "0"})] * (_MAX_429_RETRIES + 5)
+        sleep_calls: list[float] = []
+        with patch("httpx.Client.request", side_effect=responses):
+            with patch("dnsfcli.client.time.sleep", side_effect=lambda t: sleep_calls.append(t)):
+                with pytest.raises(APIError) as exc:
+                    _make_client().get("/v1/test")
+        assert exc.value.status_code == 429
+        assert "giving up" in str(exc.value)
+        # Slept at most the cap number of times, then raised — never unbounded.
+        assert len(sleep_calls) <= _MAX_429_RETRIES
 
 
 # ---------------------------------------------------------------------------

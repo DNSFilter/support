@@ -1,0 +1,15 @@
+$ dnsfcli networks update --id 736401 --name New --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭─────────────────── Dry Run — no request sent ────────────────────╮
+│   Method          PATCH                                          │
+│   URL             https://api.dnsfilter.com/v1/networks/736401   │
+│   Body            {                                              │
+│                     "name": "New",                               │
+│                     "organization_id": 802315                    │
+│                   }                                              │
+╰──────────────────────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

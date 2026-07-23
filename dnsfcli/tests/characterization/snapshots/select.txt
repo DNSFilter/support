@@ -1,0 +1,15 @@
+$ dnsfcli networks list --select id,name
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "id": "101",
+    "name": "alpha"
+  },
+  {
+    "id": "102",
+    "name": "bravo"
+  }
+]
+--- stderr ---
+

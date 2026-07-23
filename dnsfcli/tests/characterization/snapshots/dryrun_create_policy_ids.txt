@@ -1,0 +1,19 @@
+$ dnsfcli networks create --name HQ --organization-id 802315 --policy-ids ["1","2"] --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭──────────────── Dry Run — no request sent ────────────────╮
+│   Method          POST                                    │
+│   URL             https://api.dnsfilter.com/v1/networks   │
+│   Body            {                                       │
+│                     "name": "HQ",                         │
+│                     "organization_id": 802315,            │
+│                     "policy_ids": [                       │
+│                       "1",                                │
+│                       "2"                                 │
+│                     ]                                     │
+│                   }                                       │
+╰───────────────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

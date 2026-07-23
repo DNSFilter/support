@@ -1,0 +1,7 @@
+$ dnsfcli networks create --body-json {"name":"HQ","organization_id":802315} --dry-run
+--- exit: 1 ---
+--- stdout ---
+
+--- stderr ---
+Error: Required body parameter --name was not provided.
+  Type: string  Description: Network name

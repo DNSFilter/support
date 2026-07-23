@@ -1,0 +1,8 @@
+$ dnsfcli networks list --all --max-pages 1 --count
+--- exit: 0 ---
+--- stdout ---
+2 network(s)
+--- stderr ---
+
+! --max-pages: stopped at 1 page(s) of 2; results are partial — counts, sums, and --fail-on-empty reflect only the
+fetched pages.

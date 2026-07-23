@@ -19,6 +19,27 @@ PROJECT_DIR = Path(__file__).parent.parent
 SRC_DIR     = PROJECT_DIR / "src"
 CLI_SCRIPT  = PROJECT_DIR / "dnsfcli.py"
 
+sys.path.insert(0, str(SRC_DIR))
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter():
+    """Give every in-process test a fresh rate-limiter registry.
+
+    The limiter is shared per API key for the life of a process — correct for
+    the CLI (one process per invocation), but in the single pytest process it
+    would otherwise let hundreds of same-key client constructions drain one
+    bucket and make later tests block on real sleeps. Resetting per test keeps
+    the suite fast and isolated. (Subprocess-based CLI tests are unaffected —
+    they get their own process.)
+    """
+    try:
+        from dnsfcli.client import _reset_limiter_registry
+        _reset_limiter_registry()
+    except Exception:
+        pass
+    yield
+
 # ---------------------------------------------------------------------------
 # API credentials
 # ---------------------------------------------------------------------------

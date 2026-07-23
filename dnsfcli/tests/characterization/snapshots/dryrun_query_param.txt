@@ -1,0 +1,12 @@
+$ dnsfcli networks list --page 2 --page-size 10 --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭────────────────────── Dry Run — no request sent ───────────────────────╮
+│   Method          GET                                                  │
+│   URL             https://api.dnsfilter.com/v1/networks                │
+│   Query           {'organization_id': 802315, 'page': 2, 'page': 10}   │
+╰────────────────────────────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

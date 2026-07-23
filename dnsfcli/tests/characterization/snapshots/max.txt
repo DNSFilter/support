@@ -1,0 +1,6 @@
+$ dnsfcli networks list --max total
+--- exit: 0 ---
+--- stdout ---
+100  max(total)
+--- stderr ---
+! --max computed on the FIRST PAGE only — the result set spans multiple pages. Add --all for a complete/accurate result.

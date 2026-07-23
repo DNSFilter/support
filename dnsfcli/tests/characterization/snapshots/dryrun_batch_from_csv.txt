@@ -1,0 +1,17 @@
+$ dnsfcli networks create --from-csv - --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭─────────── Dry Run — no requests sent ───────────╮
+│   Operation       POST /v1/networks              │
+│   Command         networks create                │
+│   Source          -                              │
+│   Rows            1 — would send 1 request(s)    │
+│   First row       {                              │
+│                     "organization_id": 802315,   │
+│                     "name": "HQ"                 │
+│                   }                              │
+╰──────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

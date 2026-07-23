@@ -1,0 +1,17 @@
+$ dnsfcli networks list --count-by status
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "status": "active",
+    "count": 1,
+    "pct": "50.0%"
+  },
+  {
+    "status": "error",
+    "count": 1,
+    "pct": "50.0%"
+  }
+]
+--- stderr ---
+

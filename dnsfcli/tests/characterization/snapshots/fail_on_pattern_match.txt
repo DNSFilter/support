@@ -1,0 +1,8 @@
+$ dnsfcli networks list --fail-on-pattern status=error
+--- exit: 1 ---
+--- stdout ---
+
+--- stderr ---
+! --fail-on-pattern computed on the FIRST PAGE only — the result set spans multiple pages. Add --all for a
+complete/accurate result.
+--fail-on-pattern: 1 item(s) matched status=error

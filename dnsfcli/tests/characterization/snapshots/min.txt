@@ -1,0 +1,6 @@
+$ dnsfcli networks list --min blocked
+--- exit: 0 ---
+--- stdout ---
+5  min(blocked)
+--- stderr ---
+! --min computed on the FIRST PAGE only — the result set spans multiple pages. Add --all for a complete/accurate result.

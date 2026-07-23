@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -28,9 +29,24 @@ def _dir() -> Path:
     return base / "dnsfcli"
 
 
-def make_key(endpoint: str, function: str, path: str, params: dict[str, Any] | None) -> str:
+def make_key(
+    endpoint: str,
+    function: str,
+    path: str,
+    params: dict[str, Any] | None,
+    cred_scope: str = "",
+) -> str:
+    """Build the cache filename stem for a GET response.
+
+    *cred_scope* MUST encode the credential + host the response was fetched
+    under (the caller passes an opaque hash of the resolved API key + base URL).
+    Without it, a response cached under one key/account would be served to a
+    later invocation using a *different* key hitting the same path — a
+    cross-account data disclosure for endpoints scoped only by the API token.
+    """
     payload = json.dumps(
-        {"e": endpoint, "f": function, "p": path, "q": sorted((params or {}).items())},
+        {"e": endpoint, "f": function, "p": path,
+         "q": sorted((params or {}).items()), "c": cred_scope},
     ).encode()
     digest = hashlib.sha256(payload).hexdigest()[:20]
     return f"{endpoint}-{function}-{digest}"
@@ -51,14 +67,27 @@ def get(key: str, ttl: int) -> Any | None:
 
 
 def put(key: str, payload: Any) -> None:
-    """Write *payload* to the cache (best-effort; never raises)."""
+    """Write *payload* to the cache (best-effort; never raises).
+
+    Cached responses contain real API data (user lists, policy contents),
+    so the directory and files are owner-only (0700/0600) — the same
+    hardening applied to the audit log.
+    """
     try:
         d = _dir()
         d.mkdir(parents=True, exist_ok=True)
-        (d / f"{key}.json").write_text(
-            json.dumps({"ts": time.time(), "payload": payload}, default=str),
-            encoding="utf-8",
-        )
+        os.chmod(d, 0o700)
+        data = json.dumps({"ts": time.time(), "payload": payload}, default=str)
+        target = d / f"{key}.json"
+        # Write to a unique temp file then atomically rename into place, so a
+        # concurrent reader (or another writer of the same key) never sees a
+        # half-written entry. os.replace is atomic within a filesystem.
+        tmp = d / f"{key}.{os.getpid()}.{threading.get_ident()}.tmp"
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            os.chmod(tmp, 0o600)
+            fh.write(data)
+        os.replace(tmp, target)
     except Exception:
         pass
 

@@ -21,6 +21,9 @@ class Param:
     kind: Literal["path", "query", "body"] = "body"
     type_hint: str = "string"
     top_level: bool = False  # when True and Operation.body_key is set, stays at root of body
+    # Params carrying credentials (client_secret, payment_token, new_password)
+    # set secret=True so their CLI values are scrubbed from the history log.
+    secret: bool = False
 
 
 @dataclass
@@ -60,8 +63,9 @@ def _uuid_id(label: str = "Resource UUID") -> Param:
     return Param("id", label, required=True, kind="path", type_hint="string")
 
 def _p(name: str, desc: str, *, req: bool = False,
-       kind: str = "body", hint: str = "string", tl: bool = False) -> Param:
-    return Param(name, desc, required=req, kind=kind, type_hint=hint, top_level=tl)  # type: ignore[arg-type]
+       kind: str = "body", hint: str = "string", tl: bool = False,
+       secret: bool = False) -> Param:
+    return Param(name, desc, required=req, kind=kind, type_hint=hint, top_level=tl, secret=secret)  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +150,7 @@ REGISTRY["billing"] = Endpoint(
                      [Param("organization_id", "Organization ID — injected automatically from stored org-id if omitted", required=True, kind="query", type_hint="integer")]),
         "create":  Operation("POST",  "/v1/billing", "Create billing record",
                              [_p("organization_id", "Organization ID", req=True, hint="integer"),
-                              _p("payment_token",   "Payment token",   req=True)]),
+                              _p("payment_token",   "Payment token",   req=True, secret=True)]),
         "get-address":    Operation("GET",   "/v1/billing/address/{organization_id}",
                                     "Get billing address",
                                     [Param("organization_id", "Organization ID", required=True, kind="path", type_hint="integer")],
@@ -278,7 +282,7 @@ REGISTRY["domains"] = Endpoint(
 
 _ec_body = [
     _p("client_id",             "OAuth client ID"),
-    _p("client_secret",         "OAuth client secret"),
+    _p("client_secret",         "OAuth client secret", secret=True),
     _p("discovery_url",         "OIDC discovery URL"),
     _p("organization_id",       "Organization ID",          hint="integer"),
     _p("default_organization_id","Default organization ID", hint="integer"),
@@ -1013,7 +1017,7 @@ REGISTRY["users"] = Endpoint(
         "list-all":        Operation("GET",   "/v1/users/all",            "List all users"),
         "show":            Operation("GET",   "/v1/users/{id}",           "Show a user",      [_id()], uses_id=True),
         "change-password": Operation("PATCH", "/v1/users/change_password","Change current user password",
-                                     [_p("new_password", "New password", req=True)]),
+                                     [_p("new_password", "New password", req=True, secret=True)]),
     },
 )
 

@@ -30,11 +30,46 @@ _META_ACTIVE   = "_active_profile"
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+class KeychainError(RuntimeError):
+    """Raised when the OS keychain can't be read or written.
+
+    Common on headless Linux / SSH sessions without a Secret Service, a
+    locked keychain, or a denied macOS Keychain prompt. Carries a
+    user-facing message; callers surface it cleanly instead of a traceback.
+    """
+
+
+_KEYCHAIN_HINT = (
+    "Could not access the OS keychain. This usually means no keychain "
+    "backend is available (common on headless Linux / SSH) or access was "
+    "denied. Use the DNSF_API_KEY / DNSF_ORG_ID environment variables "
+    "instead, or configure a keyring backend."
+)
+
+
 def _get_or_none(username: str) -> str | None:
     try:
         return keyring.get_password(SERVICE, username)
     except keyring.errors.KeyringError:
         return None
+
+
+def _kset(username: str, value: str) -> None:
+    """Write to the keychain, converting backend failures to KeychainError."""
+    try:
+        keyring.set_password(SERVICE, username, value)
+    except keyring.errors.KeyringError as exc:
+        raise KeychainError(f"{_KEYCHAIN_HINT}\n  ({exc})") from exc
+
+
+def _kdel(username: str) -> None:
+    """Delete a keychain entry; missing entries and backend errors are ignored."""
+    try:
+        keyring.delete_password(SERVICE, username)
+    except keyring.errors.PasswordDeleteError:
+        pass
+    except keyring.errors.KeyringError:
+        pass
 
 
 def _cred_key(profile: str, field: str) -> str:
@@ -67,7 +102,7 @@ def _register_profile(profile: str) -> None:
     if profile not in existing:
         others = [p for p in existing if p != DEFAULT_PROFILE]
         others.append(profile)
-        keyring.set_password(SERVICE, _META_PROFILES, ",".join(others))
+        _kset(_META_PROFILES, ",".join(others))
 
 
 def _unregister_profile(profile: str) -> None:
@@ -76,7 +111,7 @@ def _unregister_profile(profile: str) -> None:
         return
     existing = list_profiles()
     others = [p for p in existing if p != DEFAULT_PROFILE and p != profile]
-    keyring.set_password(SERVICE, _META_PROFILES, ",".join(others))
+    _kset(_META_PROFILES, ",".join(others))
 
 
 # ---------------------------------------------------------------------------
@@ -90,7 +125,7 @@ def get_active_profile() -> str:
 
 def set_active_profile(profile: str) -> None:
     """Persist *profile* as the active profile."""
-    keyring.set_password(SERVICE, _META_ACTIVE, profile)
+    _kset(_META_ACTIVE, profile)
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +134,7 @@ def set_active_profile(profile: str) -> None:
 
 def store_api_key(api_key: str, profile: str = DEFAULT_PROFILE) -> None:
     _register_profile(profile)
-    keyring.set_password(SERVICE, _cred_key(profile, "api_key"), api_key)
+    _kset(_cred_key(profile, "api_key"), api_key)
 
 
 def get_api_key(profile: str = DEFAULT_PROFILE) -> str | None:
@@ -108,13 +143,13 @@ def get_api_key(profile: str = DEFAULT_PROFILE) -> str | None:
 
 def delete_api_key(profile: str = DEFAULT_PROFILE) -> None:
     try:
-        keyring.delete_password(SERVICE, _cred_key(profile, "api_key"))
+        _kdel(_cred_key(profile, "api_key"))
     except keyring.errors.PasswordDeleteError:
         pass
 
 
 def store_org_id(org_id: str, profile: str = DEFAULT_PROFILE) -> None:
-    keyring.set_password(SERVICE, _cred_key(profile, "org_id"), org_id)
+    _kset(_cred_key(profile, "org_id"), org_id)
 
 
 def get_org_id(profile: str = DEFAULT_PROFILE) -> str | None:
@@ -123,7 +158,7 @@ def get_org_id(profile: str = DEFAULT_PROFILE) -> str | None:
 
 def delete_org_id(profile: str = DEFAULT_PROFILE) -> None:
     try:
-        keyring.delete_password(SERVICE, _cred_key(profile, "org_id"))
+        _kdel(_cred_key(profile, "org_id"))
     except keyring.errors.PasswordDeleteError:
         pass
 
@@ -131,7 +166,7 @@ def delete_org_id(profile: str = DEFAULT_PROFILE) -> None:
 def store_base_url(url: str, profile: str = DEFAULT_PROFILE) -> None:
     if not url.startswith("https://"):
         raise ValueError(f"Base URL must use HTTPS. Got: {url!r}")
-    keyring.set_password(SERVICE, _cred_key(profile, "base_url"), url)
+    _kset(_cred_key(profile, "base_url"), url)
 
 
 def get_base_url(profile: str = DEFAULT_PROFILE) -> str:
@@ -141,7 +176,7 @@ def get_base_url(profile: str = DEFAULT_PROFILE) -> str:
 
 def delete_base_url(profile: str = DEFAULT_PROFILE) -> None:
     try:
-        keyring.delete_password(SERVICE, _cred_key(profile, "base_url"))
+        _kdel(_cred_key(profile, "base_url"))
     except keyring.errors.PasswordDeleteError:
         pass
 
@@ -160,7 +195,7 @@ def clear_profile(profile: str = DEFAULT_PROFILE) -> None:
         # If this was the active profile, reset to default
         if get_active_profile() == profile:
             try:
-                keyring.delete_password(SERVICE, _META_ACTIVE)
+                _kdel(_META_ACTIVE)
             except keyring.errors.PasswordDeleteError:
                 pass
 
@@ -173,7 +208,7 @@ def clear_all() -> None:
         delete_base_url(profile)
     for meta_key in (_META_PROFILES, _META_ACTIVE):
         try:
-            keyring.delete_password(SERVICE, meta_key)
+            _kdel(meta_key)
         except keyring.errors.PasswordDeleteError:
             pass
 
@@ -181,7 +216,7 @@ def clear_all() -> None:
 def store_last_verified(profile: str = DEFAULT_PROFILE) -> None:
     import datetime
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    keyring.set_password(SERVICE, _cred_key(profile, "last_verified_at"), ts)
+    _kset(_cred_key(profile, "last_verified_at"), ts)
 
 
 def get_last_verified(profile: str = DEFAULT_PROFILE) -> str | None:
