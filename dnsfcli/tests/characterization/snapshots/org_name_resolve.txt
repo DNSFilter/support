@@ -1,0 +1,7 @@
+$ dnsfcli networks list --org-name Acme --count
+--- exit: 0 ---
+--- stdout ---
+2 network(s)
+--- stderr ---
+! --count computed on the FIRST PAGE only — the result set spans multiple pages. Add --all for a complete/accurate
+result.

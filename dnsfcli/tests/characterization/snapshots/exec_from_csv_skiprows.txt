@@ -1,0 +1,9 @@
+$ dnsfcli networks create --from-csv - --yes --no-progress --skip-rows 1
+--- exit: 0 ---
+--- stdout ---
+--skip-rows: skipping first 1 row(s) (2 total)
+  Row 1: ✓ (id: 999)
+
+Done: 1/1 row(s) succeeded
+--- stderr ---
+

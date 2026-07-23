@@ -1,0 +1,15 @@
+$ dnsfcli networks list --last 1
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "id": "102",
+    "name": "bravo",
+    "status": "error",
+    "blocked": 5,
+    "total": 50,
+    "note": "x"
+  }
+]
+--- stderr ---
+

@@ -1,0 +1,7 @@
+$ dnsfcli networks list --format {id} {name} {status}
+--- exit: 0 ---
+--- stdout ---
+101 alpha active
+102 bravo error
+--- stderr ---
+

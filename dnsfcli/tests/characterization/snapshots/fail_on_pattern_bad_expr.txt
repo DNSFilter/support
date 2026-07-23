@@ -1,0 +1,9 @@
+$ dnsfcli networks list --fail-on-pattern !!bad
+--- exit: 2 ---
+--- stdout ---
+
+--- stderr ---
+! --fail-on-pattern computed on the FIRST PAGE only — the result set spans multiple pages. Add --all for a
+complete/accurate result.
+Error: --fail-on-pattern: invalid expression: Unrecognised filter expression: '!!bad'. Expected form: field=value,
+field!=value, field~value, field>=value, etc.

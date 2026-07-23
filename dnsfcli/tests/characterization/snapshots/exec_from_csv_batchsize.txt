@@ -1,0 +1,13 @@
+$ dnsfcli networks create --from-csv - --yes --no-progress --batch-size 1
+--- exit: 0 ---
+--- stdout ---
+Batch 1/2 (1 rows)
+  Row 1: ✓ (id: 999)
+
+Done: 1/1 row(s) succeeded
+Batch 2/2 (1 rows)
+  Row 1: ✓ (id: 999)
+
+Done: 1/1 row(s) succeeded
+--- stderr ---
+

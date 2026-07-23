@@ -1,0 +1,15 @@
+$ dnsfcli networks list --filter status=error --filter name~char --filter-mode or
+--- exit: 0 ---
+--- stdout ---
+[
+  {
+    "id": "102",
+    "name": "bravo",
+    "status": "error",
+    "blocked": 5,
+    "total": 50,
+    "note": "x"
+  }
+]
+--- stderr ---
+

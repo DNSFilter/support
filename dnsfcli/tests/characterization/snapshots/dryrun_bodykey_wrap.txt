@@ -1,0 +1,15 @@
+$ dnsfcli policies add-blacklist-domain --id 285109 --domain evil.com --note n --dry-run
+--- exit: 0 ---
+--- stdout ---
+╭────────────────────────────── Dry Run — no request sent ──────────────────────────────╮
+│   Method          POST                                                                │
+│   URL             https://api.dnsfilter.com/v1/policies/285109/add_blacklist_domain   │
+│   Body            {                                                                   │
+│                     "domain": "evil.com",                                             │
+│                     "note": "n"                                                       │
+│                   }                                                                   │
+╰───────────────────────────────────────────────────────────────────────────────────────╯
+
+Remove --dry-run to execute.
+--- stderr ---
+

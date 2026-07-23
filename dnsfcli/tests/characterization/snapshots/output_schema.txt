@@ -1,0 +1,16 @@
+$ dnsfcli networks list --output-schema
+--- exit: 0 ---
+--- stdout ---
+     networks list — schema
+┏━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━┓
+┃ field   ┃ type     ┃ example ┃
+┡━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━┩
+│ id      │ str      │ 101     │
+│ name    │ str      │ alpha   │
+│ status  │ str      │ active  │
+│ blocked │ int      │ 30      │
+│ total   │ int      │ 100     │
+│ note    │ NoneType │ None    │
+└─────────┴──────────┴─────────┘
+--- stderr ---
+

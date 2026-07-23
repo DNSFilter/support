@@ -227,6 +227,10 @@ def read_csv_input(
     **No API calls are made here.**
     """
     # ---- stdin support -------------------------------------------------------
+    # A customer's domain list may transit stdin; the temp copy is deleted as
+    # soon as it has been read (and on any early-exit error) so it doesn't
+    # linger in the temp dir.
+    _stdin_tmp: str | None = None
     if str(filepath) == "-":
         import sys
         import tempfile
@@ -236,24 +240,37 @@ def read_csv_input(
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False, encoding="utf-8") as tmp:
             tmp.write(content)
             filepath = tmp.name
+            _stdin_tmp = tmp.name
 
-    _warn_if_traversal(filepath)
-    path = Path(filepath)
+    def _cleanup_stdin_tmp() -> None:
+        if _stdin_tmp:
+            try:
+                Path(_stdin_tmp).unlink()
+            except OSError:
+                pass
 
-    # ---- file-level checks --------------------------------------------------
-    if not path.exists():
-        raise CsvValidationError(str(filepath), [f"File not found: {filepath}"])
-    if path.stat().st_size == 0:
-        raise CsvValidationError(str(filepath), ["File is empty"])
+    try:
+        _warn_if_traversal(filepath)
+        path = Path(filepath)
 
-    # Strip UTF-8 BOM (Excel), skip blank lines and # comments
-    raw_lines: list[str] = []
-    with path.open(encoding="utf-8-sig") as fh:
-        for line in fh:
-            stripped = line.rstrip("\n\r")
-            if stripped.lstrip().startswith("#") or not stripped.strip():
-                continue
-            raw_lines.append(stripped)
+        # ---- file-level checks ----------------------------------------------
+        if not path.exists():
+            raise CsvValidationError(str(filepath), [f"File not found: {filepath}"])
+        if path.stat().st_size == 0:
+            raise CsvValidationError(str(filepath), ["File is empty"])
+
+        # Strip UTF-8 BOM (Excel), skip blank lines and # comments
+        raw_lines: list[str] = []
+        with path.open(encoding="utf-8-sig") as fh:
+            for line in fh:
+                stripped = line.rstrip("\n\r")
+                if stripped.lstrip().startswith("#") or not stripped.strip():
+                    continue
+                raw_lines.append(stripped)
+    finally:
+        # The file's contents are now in memory (raw_lines) or we're bailing
+        # out with an error — either way the temp copy is no longer needed.
+        _cleanup_stdin_tmp()
 
     if not raw_lines:
         raise CsvValidationError(str(filepath), [

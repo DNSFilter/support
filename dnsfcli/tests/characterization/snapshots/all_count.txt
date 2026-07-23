@@ -1,0 +1,6 @@
+$ dnsfcli networks list --all --count
+--- exit: 0 ---
+--- stdout ---
+3 network(s)
+--- stderr ---
+

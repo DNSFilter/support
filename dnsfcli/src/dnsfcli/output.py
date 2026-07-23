@@ -17,12 +17,18 @@ from __future__ import annotations
 import csv
 import json
 import os
+import re
+import threading
 from pathlib import Path
 from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+
+# Serializes set_output_options so concurrent --parallel-orgs workers can't
+# tear the console/err_console rebind.
+_output_opts_lock = threading.Lock()
 
 # Honour the NO_COLOR standard (https://no-color.org/) at import time.
 _no_color: bool = bool(os.environ.get("NO_COLOR"))
@@ -67,8 +73,31 @@ def set_output_options(
     log_file: str | None = None,
     suppress_data: bool = False,
 ) -> None:
-    """Reconfigure module-level output flags.  Call once early in app_entry()."""
-    global _quiet, _quiet_ok, _no_color, _truncate, _no_wrap, _color_rules, _color_scale, _tee_path, _csv_null_value, _table_style, _log_fh, _suppress_data, console, err_console
+    """Reconfigure module-level output flags.
+
+    Call once early in app_entry(). It also runs once per --run inside
+    _run_api_call; under --parallel-orgs that means concurrent worker threads
+    may enter it at once, so the whole body is guarded by a lock to prevent a
+    torn rebind of the shared console/err_console (a reader seeing a
+    half-swapped pair). The arguments are invocation constants, so repeated
+    calls converge on the same state.
+    """
+    with _output_opts_lock:
+      _set_output_options_locked(
+        quiet=quiet, no_color=no_color, truncate=truncate, no_wrap=no_wrap,
+        color_rules=color_rules, color_scale=color_scale, tee=tee,
+        quiet_ok=quiet_ok, csv_null_value=csv_null_value, table_style=table_style,
+        log_file=log_file, suppress_data=suppress_data,
+      )
+
+
+def _set_output_options_locked(
+    *, quiet, no_color, truncate, no_wrap, color_rules, color_scale, tee,
+    quiet_ok, csv_null_value, table_style, log_file, suppress_data,
+) -> None:
+    # console/err_console are MUTATED in place, not reassigned, so they are
+    # intentionally absent from this global declaration.
+    global _quiet, _quiet_ok, _no_color, _truncate, _no_wrap, _color_rules, _color_scale, _tee_path, _csv_null_value, _table_style, _log_fh, _suppress_data
     _quiet = quiet or _quiet
     if suppress_data:
         _suppress_data = True
@@ -82,9 +111,10 @@ def set_output_options(
     if log_file:
         try:
             _log_fh = open(log_file, "a", encoding="utf-8")
-            err_console = Console(file=_log_fh, no_color=True)
         except OSError:
-            pass  # fall back to stderr if file can't be opened
+            _log_fh = None  # fall back to stderr if file can't be opened
+        # (err_console.file is redirected below, in the in-place mutation block,
+        #  so the imported err_console reference stays valid.)
     if no_wrap:
         _no_wrap = True
     if color_rules:
@@ -101,25 +131,20 @@ def set_output_options(
     if truncate is not None:
         # -1 means "no truncation" at the CLI level; store as None here
         _truncate = None if truncate < 0 else truncate
-    if _no_color:
-        console = Console(no_color=True, record=bool(_tee_path))
-        # Preserve the --log-file redirect: only rebuild err_console on stderr
-        # when no log file handle is active.
-        if _log_fh is not None:
-            err_console = Console(file=_log_fh, no_color=True)
-        else:
-            err_console = Console(stderr=True, no_color=True)
-    elif _tee_path:
-        console = Console(record=True)
 
-    # The consoles above are REBOUND, not mutated — modules that imported them
-    # by name would otherwise keep printing to the stale instances (breaking
-    # --tee capture, --no-color, and --log-file for their output).
-    import sys as _sys
-    _cli_mod = _sys.modules.get("dnsfcli.cli")
-    if _cli_mod is not None:
-        _cli_mod.console = console
-        _cli_mod.err_console = err_console
+    # Mutate the EXISTING console objects in place rather than rebuilding and
+    # rebinding them. Every module does `from .output import console,
+    # err_console`, so those names must keep pointing at the same objects — an
+    # in-place update is seen everywhere and needs no sys.modules trickery.
+    # (record/no_color/file are all settable on a live rich.Console.)
+    if _no_color:
+        console.no_color = True
+        err_console.no_color = True
+    if _tee_path:
+        console.record = True
+    if _log_fh is not None:
+        err_console.file = _log_fh
+        err_console.no_color = True
 
 
 _tee_raw: list[str] = []  # raw stdout text (--json/--jsonl/--pick) captured for --tee
@@ -448,15 +473,46 @@ def print_response(data: Any, *, raw: bool = False, title: str = "", columns: li
 # ---------------------------------------------------------------------------
 
 def _csv_cell(value: Any) -> str:
-    """Render a value as a plain CSV cell string (no Rich markup)."""
+    """Render a value as a plain CSV cell string (no Rich markup).
+
+    Neutralizes spreadsheet formula injection: exported data is exactly the
+    untrusted content this tool handles (customer domains, notes, threat
+    feeds), and a value beginning with = + - @ (optionally after whitespace)
+    is executed as a formula when the CSV is opened in Excel/Sheets. We
+    prefix such values with a single quote so the spreadsheet treats them as
+    literal text, per the OWASP CSV-injection guidance.
+    """
     if value is None:
         return _csv_null_value
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, (dict, list)):
         # Compact JSON for nested containers -- still machine-readable
-        return json.dumps(value, separators=(",", ":"), default=str)
-    return str(value)
+        rendered = json.dumps(value, separators=(",", ":"), default=str)
+    else:
+        rendered = str(value)
+    return _neutralize_formula(rendered)
+
+
+def _neutralize_formula(text: str) -> str:
+    """Prefix a leading formula-trigger character with a single quote.
+
+    `=` `@` tab and CR always trigger. `+`/`-` also trigger a formula, but a
+    plain negative/signed number is legitimate data, so those are neutralized
+    only when the value is not numeric (avoids mangling e.g. -5 into '-5).
+    """
+    stripped = text.lstrip()
+    if not stripped:
+        return text
+    lead = stripped[0]
+    if lead in ("=", "@", "\t", "\r"):
+        return "'" + text
+    if lead in ("+", "-"):
+        try:
+            float(stripped)          # a real signed number → safe, leave as-is
+        except ValueError:
+            return "'" + text
+    return text
 
 
 def _rows_for_csv(data: Any, columns: list[str] | None = None) -> tuple[list[str], list[list[str]]]:
@@ -555,6 +611,9 @@ def write_csv(
 # Utility printers (used by auth commands and error paths)
 # ---------------------------------------------------------------------------
 
+_ERR_SECRET_KEY_RE = re.compile(r"(secret|password|passwd|token|credential|api[-_]?key)", re.I)
+
+
 def print_error(message: str, detail: Any = None) -> None:
     # Errors are never suppressed by --quiet.
     err_console.print(f"[bold red]Error:[/bold red] {message}")
@@ -563,12 +622,25 @@ def print_error(message: str, detail: Any = None) -> None:
     if isinstance(detail, dict):
         for k, v in detail.items():
             if v is not None:
+                # An API validation-error body can echo the fields the client
+                # submitted; redact any that look like a secret so a rejected
+                # create/change-password doesn't print the value (also relevant
+                # when err_console is redirected to --log-file).
+                if isinstance(k, str) and _ERR_SECRET_KEY_RE.search(k):
+                    v = "***"
                 err_console.print(f"  [dim]{k}:[/dim] {v}")
     elif isinstance(detail, list):
         for item in detail:
             err_console.print(f"  [dim]-[/dim] {item}")
     else:
         err_console.print(f"  [dim]{detail}[/dim]")
+
+
+def is_quiet() -> bool:
+    """True when --quiet is active (suppress success/info chatter). Reads the
+    live module state so callers outside this module (e.g. the --exec summary
+    in cli.py) don't have to reach into a private global."""
+    return _quiet
 
 
 def print_success(message: str) -> None:

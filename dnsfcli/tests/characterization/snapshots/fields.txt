@@ -1,0 +1,11 @@
+$ dnsfcli networks list --fields
+--- exit: 0 ---
+--- stdout ---
+id
+name
+status
+blocked
+total
+note
+--- stderr ---
+

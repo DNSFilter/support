@@ -1,0 +1,7 @@
+$ dnsfcli networks list --pick name
+--- exit: 0 ---
+--- stdout ---
+alpha
+bravo
+--- stderr ---
+

@@ -1,0 +1,6 @@
+$ dnsfcli networks list --jq data.0.name
+--- exit: 0 ---
+--- stdout ---
+alpha
+--- stderr ---
+

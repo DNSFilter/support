@@ -1,0 +1,8 @@
+$ dnsfcli networks list --all --pick id
+--- exit: 0 ---
+--- stdout ---
+101
+102
+103
+--- stderr ---
+

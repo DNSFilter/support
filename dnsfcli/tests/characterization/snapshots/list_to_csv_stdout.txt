@@ -1,0 +1,8 @@
+$ dnsfcli networks list --to-csv -
+--- exit: 0 ---
+--- stdout ---
+id,name,status,blocked,total,note
+101,alpha,active,30,100,
+102,bravo,error,5,50,x
+--- stderr ---
+
