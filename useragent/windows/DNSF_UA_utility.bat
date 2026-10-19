@@ -1,14 +1,16 @@
 @ECHO OFF
-REM Version 0.3
+REM Version 0.4
 REM Created by Joshua Lamb on 8AUG18
 SETLOCAL EnableDelayedExpansion
 TITLE DNSFILTER INSTALLER/DEBUGGER
 SET workdir=C:\temp
 IF not exist %workdir% mkdir %workdir%
-SET mspagenturl="https://download.dnsfilter.com/User_Agent/Windows/DNS_Agent_Setup.msi"
-SET mspmsi=DNS_Agent_Setup.msi
-SET retailagenturl="https://download.dnsfilter.com/User_Agent/Windows/DNSFilter_Agent_Setup.msi"
-SET retailmsi=DNSFilter_Agent_Setup.msi
+SET baseurl=https://downloads.dnsfilter.com/User_Agent/Windows
+SET arch=x64
+IF /I "%PROCESSOR_ARCHITECTURE%"=="ARM64" SET arch=arm64
+IF /I "%PROCESSOR_ARCHITEW6432%"=="ARM64" SET arch=arm64
+SET mspmsi=DNS-Agent-Setup-%arch%.msi
+SET retailmsi=DNSFilter-Agent-Setup-%arch%.msi
 SET adapterlist="Local Area Connection" "Ethernet" "Wireless Network Connection" "Wi-Fi"
 CLS
 
@@ -123,16 +125,39 @@ SET /P installer1=Select [1] MSP, [2] Retail, or [3] Abort:
      IF [%installer1%]==[3] GOTO MENU
 	 IF [%installer1%]==[] GOTO MENU
 :MSP
-SET dldest=%workdir%\%mspmsi%
-IF exist %dldest% del %dldest%
-bitsadmin.exe /transfer "MSP Agent" %mspagenturl% %dldest%
-GOTO INSTALLER2
+SET msiname=%mspmsi%
+GOTO DOWNLOAD
 
 :RETAIL
-SET dldest=%workdir%\%retailmsi%
-IF exist %dldest% del %dldest%
-bitsadmin.exe /transfer "Retail Agent" %retailagenturl% %dldest%
+SET msiname=%retailmsi%
+GOTO DOWNLOAD
+
+:DOWNLOAD
+SET dldest=%workdir%\%msiname%
+SET sumdest=%workdir%\%msiname%.sha256sum.asc
+IF exist "%dldest%" del "%dldest%"
+IF exist "%sumdest%" del "%sumdest%"
+ECHO Downloading %msiname%
+bitsadmin.exe /transfer "DNSFilter Agent" "%baseurl%/%msiname%" "%dldest%"
+bitsadmin.exe /transfer "DNSFilter Agent Checksum" "%baseurl%/%msiname%.sha256sum.asc" "%sumdest%"
+SET "expected="
+SET "actual="
+FOR /F "tokens=1" %%H IN ('findstr /I /C:"%msiname%" "%sumdest%"') DO SET expected=%%H
+FOR /F "skip=1 delims=" %%A IN ('certutil -hashfile "%dldest%" SHA256') DO IF NOT DEFINED actual SET actual=%%A
+IF NOT DEFINED expected GOTO CHECKSUM_FAIL
+IF NOT DEFINED actual GOTO CHECKSUM_FAIL
+SET actual=!actual: =!
+IF /I NOT "!expected!"=="!actual!" GOTO CHECKSUM_FAIL
+ECHO Checksum verified.
 GOTO INSTALLER2
+
+:CHECKSUM_FAIL
+Echo:
+ECHO ERROR: The downloaded installer did not match its published checksum.
+ECHO The installer has been deleted. Please try again.
+IF exist "%dldest%" del "%dldest%"
+PAUSE
+GOTO MENU
 
 :INSTALLER2
 CLS
